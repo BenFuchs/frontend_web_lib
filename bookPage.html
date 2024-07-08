@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book List</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const SERVER = 'https://backend-render-o92w.onrender.com/';
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('acc_token');
+
+            if (!token) {
+                console.error('JWT token is missing');
+                return;
+            }
+
+            axios.get(SERVER + 'showBook', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+                .then(response => {
+                    console.log('Books fetched:', response.data); // Debug output
+                    const bookContainer = document.getElementById('book-container');
+                    bookContainer.innerHTML = ''; // Clear container in case of reload
+
+                    // Get the user role from the token
+                    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+                    console.log('Token Payload:', tokenPayload);
+
+                    const userRole = tokenPayload.sub.role;
+                    console.log('User Role:', userRole);
+
+                    // Conditionally add "ADD BOOK" link for admin users
+                    if (userRole === 'Admin') {
+                        const addBookLink = document.createElement('a');
+                        addBookLink.href = 'addBook.html';
+                        addBookLink.innerText = 'ADD BOOK';
+                        document.querySelector('.navbar').appendChild(addBookLink);
+                    }
+
+                    if (userRole === 'Admin') {
+                        const userListLink = document.createElement('a');
+                        userListLink.href = 'userPage.html';
+                        userListLink.innerText = 'USERS LIST'
+                        document.querySelector('.navbar').appendChild(userListLink)
+                    }
+
+                    response.data.forEach(book => {
+                        const bookDiv = document.createElement('div');
+                        bookDiv.className = 'book-item';
+
+                        const bookInfo = document.createElement('p');
+                        bookInfo.innerText = `Name: ${book.bookName}, Author: ${book.bookAuthor}, Published: ${book.bookPublished}`;
+                        bookDiv.appendChild(bookInfo);
+
+                        // Display book image if available
+                        if (book.book_image_path) {
+                            const bookImage = document.createElement('img');
+                            bookImage.src = SERVER + book.book_image_path;  // Adjust path to match backend route
+                            bookImage.alt = `Image of ${book.bookName}`;
+                            bookImage.style.maxWidth = '100px';
+                            bookDiv.appendChild(bookImage);
+                        }
+
+                        // Add delete button only for admin users
+                        if (userRole === 'Admin') {
+                            const deleteButton = document.createElement('button');
+                            deleteButton.className = 'delete-button';
+                            deleteButton.innerText = 'DELETE';
+                            deleteButton.onclick = () => handleDelete(book.id);
+                            bookDiv.appendChild(deleteButton);
+
+                            const updateButton = document.createElement('button');
+                            updateButton.className = 'delete-button';
+                            updateButton.innerText = 'UPDATE';
+                            updateButton.onclick = () => handleUpdate(book.id);
+                            bookDiv.appendChild(updateButton);
+                        }
+
+                        const loanButton = document.createElement('button');
+                        loanButton.className = 'loan-button';
+                        loanButton.innerText = 'LOAN';
+                        loanButton.onclick = () => handleLoan(book.id);
+                        bookDiv.appendChild(loanButton);
+
+                        bookContainer.appendChild(bookDiv);
+                    });
+                })
+                .catch(error => console.error('Error fetching books:', error));
+        });
+
+        function handleDelete(bookID) {
+            console.log('Delete book:', bookID);
+
+            const token = localStorage.getItem('acc_token');
+            if (!token) {
+                console.error('Access token not found');
+                return;
+            }
+
+            axios.delete(SERVER + `delBook/${bookID}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+                .then(response => {
+                    console.log('Book deleted:', response.data);
+                    // Optionally, refresh the book list or remove the deleted book from the DOM
+                    document.getElementById('book-container').innerHTML = '';
+                    document.dispatchEvent(new Event('DOMContentLoaded')); // Reload the book list
+                })
+                .catch(error => console.error('Error deleting book:', error));
+        }
+
+        const handleUpdate = (bookID) => {
+            console.log('Update book:', bookID);
+
+            const new_bookName = prompt("Please enter new book name: ");
+            const new_bookAuthor = prompt("Please enter new book author: ");
+            const new_bookPublished = prompt("Please enter the publishing year of the book: ");
+
+            // Create an input element for file upload
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+
+            fileInput.onchange = () => {
+                const new_img = fileInput.files[0];
+
+                // Handle the updated book data, including the image
+                console.log({
+                    bookID,
+                    new_bookName,
+                    new_bookAuthor,
+                    new_bookPublished,
+                    new_img
+                });
+
+                // Send this data to your backend using Axios
+                const formData = new FormData();
+                formData.append('bookName', new_bookName);
+                formData.append('bookAuthor', new_bookAuthor);
+                formData.append('bookPublished', new_bookPublished);
+                formData.append('image', new_img);
+
+                const token = localStorage.getItem('acc_token')
+                if (!token) {
+                console.error('Access token not found');
+                return;
+            }
+
+                axios.post(SERVER + `updateBook/${bookID}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${token}`
+                    }
+                }).then(response => {
+                    console.log('Book updated successfully:', response.data);
+                }).catch(error => {
+                    console.error('Error updating book:', error);
+                });
+            };
+
+            // Trigger the file input dialog directly in the user action
+            fileInput.click();
+        };
+
+        const renderBooks = (books, userRole) => {
+            const bookContainer = document.getElementById('bookContainer');
+            bookContainer.innerHTML = ''; // Clear existing books
+
+            books.forEach(book => {
+                const bookDiv = document.createElement('div');
+                bookDiv.className = 'book';
+                bookDiv.innerText = book.name;
+
+                if (userRole === 'Admin') {
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-button';
+                    deleteButton.innerText = 'DELETE';
+                    deleteButton.onclick = () => handleDelete(book.id);
+                    bookDiv.appendChild(deleteButton);
+
+                    const updateButton = document.createElement('button');
+                    updateButton.className = 'update-button';
+                    updateButton.innerText = 'UPDATE';
+                    updateButton.onclick = () => handleUpdate(book.id);
+                    bookDiv.appendChild(updateButton);
+                }
+
+                bookContainer.appendChild(bookDiv);
+            });
+        };
+
+
+        function handleLoan(bookID) {
+            console.log('Loan book:', bookID);
+            const token = localStorage.getItem('acc_token');
+            if (!token) {
+                console.error('Access token not found');
+                return;
+            }
+
+            axios.post(SERVER + `/loanBook/${bookID}`, {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+                .then(response => {
+                    console.log('Book loaned:', response.data);
+                    // Optionally, update the book status in the DOM
+                    window.location.reload()
+                })
+                .catch(error => console.error('Error loaning book:', error));
+        }
+
+
+         // Search function
+         function searchBooks() {
+            const input = document.getElementById('searchInput').value.toUpperCase();
+            const bookItems = document.getElementsByClassName('book-item');
+
+            Array.from(bookItems).forEach(item => {
+                const text = item.textContent.toUpperCase();
+                if (text.indexOf(input) > -1) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="navbar">
+        <a href="client_userPage.html">USER PAGE</a>
+    </div>
+    <div class="container">
+        <h1>Book List</h1>
+        <input type="text" id="searchInput" placeholder="Search for books..." onkeyup="searchBooks()">
+        <div id="book-container"></div>
+    </div>
+</body>
+
+</html>
