@@ -79,6 +79,12 @@
                             updateButton.innerText = 'UPDATE';
                             updateButton.onclick = () => handleUpdate(book.id);
                             bookDiv.appendChild(updateButton);
+
+                            const updateImage = document.createElement('file');
+                            updateImage.className = 'delete-button';
+                            updateImage.innerText ='UPDATE IMAGE';
+                            updateImage.onclick =()=> updateImage(book.id);
+                            bookDiv.appendChild(updateImage);
                         }
 
                         const loanButton = document.createElement('button');
