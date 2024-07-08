@@ -80,11 +80,11 @@
                             updateButton.onclick = () => handleUpdate(book.id);
                             bookDiv.appendChild(updateButton);
 
-                            const updateImage = document.createElement('file');
-                            updateImage.className = 'delete-button';
-                            updateImage.innerText ='UPDATE IMAGE';
-                            updateImage.onclick =()=> updateImage(book.id);
-                            bookDiv.appendChild(updateImage);
+                            // const updateImage = document.createElement('file');
+                            // updateImage.className = 'delete-button';
+                            // updateImage.innerText ='UPDATE IMAGE';
+                            // updateImage.onclick =()=> updateImage(book.id);
+                            // bookDiv.appendChild(updateImage);
                         }
 
                         const loanButton = document.createElement('button');
@@ -130,11 +130,11 @@
             const new_bookPublished = prompt("Please enter the publishing year of the book: ");
 
             // Create an input element for file upload
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
+            // const fileInput = document.createElement('input');
+            // fileInput.type = 'file';
 
-            fileInput.onchange = () => {
-                const new_img = fileInput.files[0];
+            // fileInput.onchange = () => {
+            //     const new_img = fileInput.files[0];
 
                 // Handle the updated book data, including the image
                 console.log({
@@ -142,7 +142,7 @@
                     new_bookName,
                     new_bookAuthor,
                     new_bookPublished,
-                    new_img
+                    // new_img
                 });
 
                 // Send this data to your backend using Axios
@@ -150,7 +150,7 @@
                 formData.append('bookName', new_bookName);
                 formData.append('bookAuthor', new_bookAuthor);
                 formData.append('bookPublished', new_bookPublished);
-                formData.append('image', new_img);
+                // formData.append('image', new_img);
 
                 const token = localStorage.getItem('acc_token')
                 if (!token) {
@@ -171,8 +171,8 @@
             };
 
             // Trigger the file input dialog directly in the user action
-            fileInput.click();
-        };
+        //     fileInput.click();
+        // };
 
         const renderBooks = (books, userRole) => {
             const bookContainer = document.getElementById('bookContainer');
