@@ -83,11 +83,11 @@ button:disabled {
 }
 
 .delete-button {
-    margin-right: 5px;
+    margin-right: auto;
 }
 
 .loan-button {
-    margin-left: 5px;
+    margin-left: auto;
 }
 
 .logout-button {
